@@ -63,17 +63,23 @@ final class Thrift {
      * @throws CommandLineException
      */
     public int compile() throws CommandLineException {
-        Commandline cl = new Commandline(executable);
-        cl.addArguments(buildThriftCommand().toArray(new String[]{}));
-        StreamConsumer output = new DefaultConsumer();
-        StreamConsumer error = new DefaultConsumer();
-        final int result = CommandLineUtils.executeCommandLine(cl, null, output, error);
 
-        if (result == 0) {
-            moveGeneratedFiles();
+        for (File thriftFile : thriftFiles) {
+            Commandline cl = new Commandline(executable);
+            cl.addArguments(buildThriftCommand(thriftFile).toArray(new String[]{}));
+            StreamConsumer output = new DefaultConsumer();
+            StreamConsumer error = new DefaultConsumer();
+            final int result = CommandLineUtils.executeCommandLine(cl, null, output, error);
+
+            if (result != 0) {
+                return result;
+            }
         }
 
-        return result;
+        // result will always be 0 here.
+        moveGeneratedFiles();
+
+        return 0;
     }
 
     /**
@@ -81,9 +87,10 @@ final class Thrift {
      * <p/>
      * This method has been made visible for testing only.
      *
+     * @param thriftFile
      * @return A list consisting of the executable followed by any arguments.
      */
-    ImmutableList<String> buildThriftCommand() {
+    ImmutableList<String> buildThriftCommand(final File thriftFile) {
         final List<String> command = newLinkedList();
         // add the executable
         for (File thriftPathElement : thriftPathElements) {
@@ -94,9 +101,7 @@ final class Thrift {
         command.add(javaOutputDirectory.toString());
         command.add("--gen");
         command.add("java");
-        for (File thriftFile : thriftFiles) {
-            command.add(thriftFile.toString());
-        }
+        command.add(thriftFile.toString());
         return ImmutableList.copyOf(command);
     }
 
