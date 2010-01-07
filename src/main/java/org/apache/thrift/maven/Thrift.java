@@ -29,6 +29,9 @@ import java.util.Set;
  * @author gak@google.com (Gregory Kick)
  */
 final class Thrift {
+
+    final static String GENERATED_JAVA = "gen-java";
+
     private final String executable;
     private final ImmutableSet<File> thriftPathElements;
     private final ImmutableSet<File> thriftFiles;
@@ -49,7 +52,7 @@ final class Thrift {
         this.thriftPathElements = checkNotNull(thriftPath, "thriftPath");
         this.thriftFiles = checkNotNull(thriftFiles, "thriftFiles");
         this.javaOutputDirectory =
-                checkNotNull(javaOutputDirectory, "javaOutputDirectory");
+            checkNotNull(javaOutputDirectory, "javaOutputDirectory");
     }
 
     /**
@@ -64,7 +67,13 @@ final class Thrift {
         cl.addArguments(buildThriftCommand().toArray(new String[]{}));
         StreamConsumer output = new DefaultConsumer();
         StreamConsumer error = new DefaultConsumer();
-        return CommandLineUtils.executeCommandLine(cl, null, output, error);
+        final int result = CommandLineUtils.executeCommandLine(cl, null, output, error);
+
+        if (result == 0) {
+            moveGeneratedFiles();
+        }
+
+        return result;
     }
 
     /**
@@ -89,6 +98,27 @@ final class Thrift {
             command.add(thriftFile.toString());
         }
         return ImmutableList.copyOf(command);
+    }
+
+    private void moveGeneratedFiles() {
+        File genDir = new File(javaOutputDirectory, GENERATED_JAVA);
+        final File[] generatedFiles = genDir.listFiles();
+        for (File generatedFile : generatedFiles) {
+            final String filename = generatedFile.getName();
+            final File targetLocation = new File(javaOutputDirectory, filename);
+            if (targetLocation.exists()) {
+                if (!targetLocation.delete()) {
+                    throw new RuntimeException("File Overwrite Failed: " + targetLocation.getPath());
+                }
+            }
+            if (!generatedFile.renameTo(targetLocation)) {
+                throw new RuntimeException("Rename Failed: " + targetLocation.getPath());
+            }
+        }
+
+        if (!genDir.delete()) {
+            throw new RuntimeException("Failed to delete directory: " + genDir.getPath());
+        }
     }
 
     /**
@@ -153,7 +183,7 @@ final class Thrift {
             } else {
                 final File parentDirectory = directory.getParentFile();
                 return (parentDirectory == null) ? false
-                        : checkThriftFileIsInThriftPathHelper(parentDirectory);
+                    : checkThriftFileIsInThriftPathHelper(parentDirectory);
             }
         }
 
@@ -201,7 +231,7 @@ final class Thrift {
         public Thrift build() {
             checkState(!thriftFiles.isEmpty());
             return new Thrift(executable, ImmutableSet.copyOf(thriftPathElements),
-                    ImmutableSet.copyOf(thriftFiles), javaOutputDirectory);
-    }
+                ImmutableSet.copyOf(thriftFiles), javaOutputDirectory);
+        }
     }
 }
