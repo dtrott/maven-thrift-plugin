@@ -105,6 +105,10 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                       temporaryThriftFileDirectory, getDependencyArtifactFiles());
           final File outputDirectory = getOutputDirectory();
           outputDirectory.mkdirs();
+
+          // Quick fix to fix issues with two mvn installs in a row (ie no clean)
+          cleanDirectory(outputDirectory);
+
           Thrift thrift =
               new Thrift.Builder(thriftExecutable, outputDirectory)
                   .addThriftPathElement(thriftSourceRoot)
