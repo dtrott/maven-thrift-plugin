@@ -14,6 +14,8 @@ import org.codehaus.plexus.util.io.RawInputStreamFacade;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -29,7 +31,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.list;
 import static org.codehaus.plexus.util.FileUtils.cleanDirectory;
 import static org.codehaus.plexus.util.FileUtils.copyStreamToFile;
-import static org.codehaus.plexus.util.FileUtils.forceDeleteOnExit;
 import static org.codehaus.plexus.util.FileUtils.getFiles;
 
 /**
@@ -97,6 +98,18 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     private DefaultArtifactRepository localRepository;
 
     /**
+     * Set this to {@code false} to disable hashing of dependent jar paths.
+     * <p/>
+     * This plugin expands jars on the classpath looking for embedded .thrift files.
+     * Normally these paths are hashed (MD5) to avoid issues with long file names on windows.
+     * However if this property is set to {@code false} longer paths will be used.
+     *
+     * @parameter default-value="true"
+     * @required
+     */
+    private boolean hashDependentPaths;
+
+    /**
      * @parameter
      */
     private Set<String> includes = ImmutableSet.of(DEFAULT_INCLUDES);
@@ -146,7 +159,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
             } catch (IllegalArgumentException e) {
                 throw new MojoFailureException("thrift failed to execute because: " + e.getMessage(), e);
             } catch (CommandLineException e) {
-                throw new MojoExecutionException("An error occured while invoking thrift.", e);
+                throw new MojoExecutionException("An error occurred while invoking thrift.", e);
             }
         } else {
             getLog().info(format("%s does not exist. Review the configuration or consider disabling the plugin.",
@@ -193,7 +206,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
      * @throws IOException
      */
     ImmutableSet<File> makeThriftPathFromJars(File temporaryThriftFileDirectory, Iterable<File> classpathElementFiles)
-            throws IOException {
+            throws IOException, MojoExecutionException {
         checkNotNull(classpathElementFiles, "classpathElementFiles");
         // clean the temporary directory to ensure that stale files aren't used
         if (temporaryThriftFileDirectory.exists()) {
@@ -234,7 +247,6 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                 }
             }
         }
-        forceDeleteOnExit(temporaryThriftFileDirectory);
         return ImmutableSet.copyOf(thriftDirectories);
     }
 
@@ -262,7 +274,16 @@ abstract class AbstractThriftMojo extends AbstractMojo {
      * @param jarPath the full path of a jar file.
      * @return the truncated path relative to the local repository or root of the drive.
      */
-    String truncatePath(final String jarPath) {
+    String truncatePath(final String jarPath) throws MojoExecutionException {
+
+        if (hashDependentPaths) {
+            try {
+                return toHexString(MessageDigest.getInstance("MD5").digest(jarPath.getBytes()));
+            } catch (NoSuchAlgorithmException e) {
+                throw new MojoExecutionException("Failed to expand dependent jar", e);
+            }
+        }
+
         String repository = localRepository.getBasedir().replace('\\', '/');
         if (!repository.endsWith("/")) {
             repository += "/";
@@ -282,5 +303,15 @@ abstract class AbstractThriftMojo extends AbstractMojo {
         }
 
         return path;
+    }
+
+    private static final char[] HEX_CHARS = "0123456789abcdef".toCharArray();
+
+    public static String toHexString(byte[] byteArray) {
+        final StringBuilder hexString = new StringBuilder(2 * byteArray.length);
+        for (final byte b : byteArray) {
+            hexString.append(HEX_CHARS[(b & 0xF0) >> 4]).append(HEX_CHARS[b & 0x0F]);
+        }
+        return hexString.toString();
     }
 }
