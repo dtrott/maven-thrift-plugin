@@ -2,6 +2,7 @@ package org.apache.thrift.maven;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.repository.DefaultArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -11,6 +12,7 @@ import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.io.RawInputStreamFacade;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -81,10 +83,18 @@ abstract class AbstractThriftMojo extends AbstractMojo {
      * Since {@code thrift} cannot access jars, thrift files in dependencies are extracted to this location
      * and deleted on exit. This directory is always cleaned during execution.
      *
-     * @parameter expression="${java.io.tmpdir}/maven-thrift"
+     * @parameter expression="${project.build.directory}/thrift-dependencies"
      * @required
      */
     private File temporaryThriftFileDirectory;
+
+    /**
+     * This is the path to the local maven {@code repository}.
+     *
+     * @parameter default-value="${localRepository}"
+     * @required
+     */
+    private DefaultArtifactRepository localRepository;
 
     /**
      * @parameter
@@ -124,6 +134,8 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                             .build();
                     final int exitStatus = thrift.compile();
                     if (exitStatus != 0) {
+                        getLog().error("thrift failed output: " + thrift.getOutput());
+                        getLog().error("thrift failed error: " + thrift.getError());
                         throw new MojoFailureException(
                                 "thrift did not exit cleanly. Review output for more information.");
                     }
@@ -134,7 +146,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
             } catch (IllegalArgumentException e) {
                 throw new MojoFailureException("thrift failed to execute because: " + e.getMessage(), e);
             } catch (CommandLineException e) {
-                throw new MojoExecutionException("An error occurred while invoking thrift.", e);
+                throw new MojoExecutionException("An error occured while invoking thrift.", e);
             }
         } else {
             getLog().info(format("%s does not exist. Review the configuration or consider disabling the plugin.",
@@ -189,28 +201,36 @@ abstract class AbstractThriftMojo extends AbstractMojo {
         }
         Set<File> thriftDirectories = newHashSet();
         for (File classpathElementFile : classpathElementFiles) {
-            checkArgument(classpathElementFile.isFile(), "%s is not a file",
-                    classpathElementFile);
-            // create the jar file. the constructor validates.
-            JarFile classpathJar;
-            try {
-                classpathJar = new JarFile(classpathElementFile);
-            } catch (IOException e) {
-                throw new IllegalArgumentException(format(
-                        "%s was not a readable artifact", classpathElementFile));
-            }
-            for (JarEntry jarEntry : list(classpathJar.entries())) {
-                final String jarEntryName = jarEntry.getName();
-                if (jarEntry.getName().endsWith(THRIFT_FILE_SUFFIX)) {
-                    //replace logic is used in order to fix issue of an invalid windows classpath to the thrift file
-                    // inside a jar.
-                    final File uncompressedCopy =
-                            new File(new File(temporaryThriftFileDirectory, classpathJar
-                                    .getName().replace(":", "_")), jarEntryName);
-                    uncompressedCopy.getParentFile().mkdirs();
-                    copyStreamToFile(new RawInputStreamFacade(classpathJar
-                            .getInputStream(jarEntry)), uncompressedCopy);
-                    thriftDirectories.add(uncompressedCopy.getParentFile());
+            if (classpathElementFile.isFile() && classpathElementFile.canRead()) {
+                // create the jar file. the constructor validates.
+                JarFile classpathJar;
+                try {
+                    classpathJar = new JarFile(classpathElementFile);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException(format(
+                            "%s was not a readable artifact", classpathElementFile));
+                }
+                for (JarEntry jarEntry : list(classpathJar.entries())) {
+                    final String jarEntryName = jarEntry.getName();
+                    if (jarEntry.getName().endsWith(THRIFT_FILE_SUFFIX)) {
+                        final File uncompressedCopy =
+                                new File(new File(temporaryThriftFileDirectory,
+                                        truncatePath(classpathJar.getName())), jarEntryName);
+                        uncompressedCopy.getParentFile().mkdirs();
+                        copyStreamToFile(new RawInputStreamFacade(classpathJar
+                                .getInputStream(jarEntry)), uncompressedCopy);
+                        thriftDirectories.add(uncompressedCopy.getParentFile());
+                    }
+                }
+            } else if (classpathElementFile.isDirectory()) {
+                File[] thriftFiles = classpathElementFile.listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        return name.endsWith(THRIFT_FILE_SUFFIX);
+                    }
+                });
+
+                if (thriftFiles.length > 0) {
+                    thriftDirectories.add(classpathElementFile);
                 }
             }
         }
@@ -234,5 +254,33 @@ abstract class AbstractThriftMojo extends AbstractMojo {
             thriftFiles.addAll(findThriftFilesInDirectory(directory));
         }
         return ImmutableSet.copyOf(thriftFiles);
+    }
+
+    /**
+     * Truncates the path of jar files so that they are relative to the local repository.
+     *
+     * @param jarPath the full path of a jar file.
+     * @return the truncated path relative to the local repository or root of the drive.
+     */
+    String truncatePath(final String jarPath) {
+        String repository = localRepository.getBasedir().replace('\\', '/');
+        if (!repository.endsWith("/")) {
+            repository += "/";
+        }
+
+        String path = jarPath.replace('\\', '/');
+        int repositoryIndex = path.indexOf(repository);
+        if (repositoryIndex != -1) {
+            path = path.substring(repositoryIndex + repository.length());
+        }
+
+        // By now the path should be good, but do a final check to fix windows machines.
+        int colonIndex = path.indexOf(':');
+        if (colonIndex != -1) {
+            // 2 = :\ in C:\
+            path = path.substring(colonIndex + 2);
+        }
+
+        return path;
     }
 }

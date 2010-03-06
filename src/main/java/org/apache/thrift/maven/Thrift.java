@@ -36,6 +36,8 @@ final class Thrift {
     private final ImmutableSet<File> thriftPathElements;
     private final ImmutableSet<File> thriftFiles;
     private final File javaOutputDirectory;
+    private final CommandLineUtils.StringStreamConsumer output;
+    private final CommandLineUtils.StringStreamConsumer error;
 
     /**
      * Constructs a new instance. This should only be used by the {@link Builder}.
@@ -51,8 +53,9 @@ final class Thrift {
         this.executable = checkNotNull(executable, "executable");
         this.thriftPathElements = checkNotNull(thriftPath, "thriftPath");
         this.thriftFiles = checkNotNull(thriftFiles, "thriftFiles");
-        this.javaOutputDirectory =
-            checkNotNull(javaOutputDirectory, "javaOutputDirectory");
+        this.javaOutputDirectory = checkNotNull(javaOutputDirectory, "javaOutputDirectory");
+        this.error = new CommandLineUtils.StringStreamConsumer();
+        this.output = new CommandLineUtils.StringStreamConsumer();
     }
 
     /**
@@ -67,8 +70,6 @@ final class Thrift {
         for (File thriftFile : thriftFiles) {
             Commandline cl = new Commandline(executable);
             cl.addArguments(buildThriftCommand(thriftFile).toArray(new String[]{}));
-            StreamConsumer output = new DefaultConsumer();
-            StreamConsumer error = new DefaultConsumer();
             final int result = CommandLineUtils.executeCommandLine(cl, null, output, error);
 
             if (result != 0) {
@@ -124,6 +125,20 @@ final class Thrift {
         if (!genDir.delete()) {
             throw new RuntimeException("Failed to delete directory: " + genDir.getPath());
         }
+    }
+
+    /**
+     * @return the output
+     */
+    public String getOutput() {
+        return output.getOutput();
+    }
+
+    /**
+     * @return the error
+     */
+    public String getError() {
+        return error.getOutput();
     }
 
     /**
