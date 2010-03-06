@@ -5,7 +5,7 @@
     <artifactId>maven-thrift-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <name>Maven Thrift Plugin</name>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>0.1.5</version>
 
     <prerequisites>
         <maven>2.0.6</maven>
