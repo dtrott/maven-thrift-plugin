@@ -90,7 +90,7 @@
         <dependency>
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.0-20100116</version>
         </dependency>
     </dependencies>
 </project>
