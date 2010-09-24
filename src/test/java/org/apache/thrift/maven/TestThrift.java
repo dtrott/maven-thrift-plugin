@@ -36,7 +36,9 @@ public class TestThrift {
         idlDir = new File(testResourceDir, "idl");
         genJavaDir = new File(testRootDir, Thrift.GENERATED_JAVA);
         builder = new Thrift.Builder("thrift", testRootDir);
-        builder.addThriftPathElement(idlDir);
+        builder
+            .setGenerator("java")
+            .addThriftPathElement(idlDir);
     }
 
     @Test
@@ -57,6 +59,12 @@ public class TestThrift {
         assertFalse("gen-java directory was not removed", genJavaDir.exists());
         assertTrue("generated java code doesn't exist",
             new File(testRootDir, "shared/SharedService.java").exists());
+    }
+
+    @Test
+    public void testThriftCompileWithGeneratorOption() throws Exception {
+        builder.setGenerator("java:private-members,hashcode");
+        testThriftCompile();
     }
 
     @Test

@@ -76,6 +76,15 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     private String thriftExecutable;
 
     /**
+     * This string is passed to the {@code --gen} option of the {@code thrift} parameter. By default
+     * it will generate Java output. The main reason for this option is to be able to add options
+     * to the Java generator - if you generate something else, you're on your own.
+     * 
+     * @parameter default-value="java"
+     */
+    private String generator;
+    
+    /**
      * @parameter
      */
     private File[] additionalThriftPathElements = new File[]{};
@@ -140,6 +149,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                     cleanDirectory(outputDirectory);
 
                     Thrift thrift = new Thrift.Builder(thriftExecutable, outputDirectory)
+                            .setGenerator(generator)
                             .addThriftPathElement(thriftSourceRoot)
                             .addThriftPathElements(derivedThriftPathElements)
                             .addThriftPathElements(asList(additionalThriftPathElements))
@@ -171,6 +181,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
         checkNotNull(project, "project");
         checkNotNull(projectHelper, "projectHelper");
         checkNotNull(thriftExecutable, "thriftExecutable");
+        checkNotNull(generator, "generator");
         final File thriftSourceRoot = getThriftSourceRoot();
         checkNotNull(thriftSourceRoot);
         checkArgument(!thriftSourceRoot.isFile(), "thriftSourceRoot is a file, not a diretory");
