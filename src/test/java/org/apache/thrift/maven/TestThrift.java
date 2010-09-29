@@ -1,6 +1,7 @@
 package org.apache.thrift.maven;
 
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.cli.CommandLineException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +44,16 @@ public class TestThrift {
 
     @Test
     public void testThriftCompile() throws Exception {
+        executeThriftCompile();
+    }
+
+    @Test
+    public void testThriftCompileWithGeneratorOption() throws Exception {
+        builder.setGenerator("java:private-members,hashcode");
+        executeThriftCompile();
+    }
+
+    private void executeThriftCompile() throws CommandLineException {
         final File thriftFile = new File(idlDir, "shared.thrift");
 
         builder.addThriftFile(thriftFile);
@@ -59,12 +70,6 @@ public class TestThrift {
         assertFalse("gen-java directory was not removed", genJavaDir.exists());
         assertTrue("generated java code doesn't exist",
             new File(testRootDir, "shared/SharedService.java").exists());
-    }
-
-    @Test
-    public void testThriftCompileWithGeneratorOption() throws Exception {
-        builder.setGenerator("java:private-members,hashcode");
-        testThriftCompile();
     }
 
     @Test

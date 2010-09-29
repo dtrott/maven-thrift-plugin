@@ -79,11 +79,11 @@ abstract class AbstractThriftMojo extends AbstractMojo {
      * This string is passed to the {@code --gen} option of the {@code thrift} parameter. By default
      * it will generate Java output. The main reason for this option is to be able to add options
      * to the Java generator - if you generate something else, you're on your own.
-     * 
+     *
      * @parameter default-value="java"
      */
     private String generator;
-    
+
     /**
      * @parameter
      */
