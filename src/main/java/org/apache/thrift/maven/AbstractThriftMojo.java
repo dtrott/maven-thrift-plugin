@@ -2,7 +2,7 @@ package org.apache.thrift.maven;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.repository.DefaultArtifactRepository;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -104,7 +104,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
      * @parameter default-value="${localRepository}"
      * @required
      */
-    private DefaultArtifactRepository localRepository;
+    private ArtifactRepository localRepository;
 
     /**
      * Set this to {@code false} to disable hashing of dependent jar paths.
@@ -225,7 +225,11 @@ abstract class AbstractThriftMojo extends AbstractMojo {
         }
         Set<File> thriftDirectories = newHashSet();
         for (File classpathElementFile : classpathElementFiles) {
-            if (classpathElementFile.isFile() && classpathElementFile.canRead()) {
+            // for some reason under IAM, we receive poms as dependent files
+            // I am excluding .xml rather than including .jar as there may be other extensions in use (sar, har, zip)
+            if (classpathElementFile.isFile() && classpathElementFile.canRead() &&
+                    !classpathElementFile.getName().endsWith(".xml")) {
+
                 // create the jar file. the constructor validates.
                 JarFile classpathJar;
                 try {
