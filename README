@@ -45,19 +45,21 @@ A minimal configuration to invoke this plugin would be:
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.thrift</groupId>
+            <groupId>org.apache.hadoop</groupId>
             <artifactId>libthrift</artifactId>
-            <version>0.2.0</version>
+            <version>0.5.0.0</version>
         </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.4.0</version>
+            <version>1.5.8</version>
         </dependency>
+
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>1.4.0</version>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
         </dependency>
     </dependencies>
 </project>
