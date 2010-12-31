@@ -71,7 +71,8 @@ final class Thrift {
     public int compile() throws CommandLineException {
 
         for (File thriftFile : thriftFiles) {
-            Commandline cl = new Commandline(executable);
+            Commandline cl = new Commandline();
+            cl.setExecutable(executable);
             cl.addArguments(buildThriftCommand(thriftFile).toArray(new String[]{}));
             final int result = CommandLineUtils.executeCommandLine(cl, null, output, error);
 
