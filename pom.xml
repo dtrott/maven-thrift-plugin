@@ -20,12 +20,12 @@
         <repository>
             <id>dtrott-public</id>
             <name>David Trott's Public Repository</name>
-            <url>ftp://maven.davidtrott.com/repository</url>
+            <url>file:///repositories/maven.davidtrott.com/release</url>
         </repository>
         <snapshotRepository>
             <id>dtrott-public</id>
             <name>David Trott's Public Snapshot Repository</name>
-            <url>ftp://maven.davidtrott.com/snapshot</url>
+            <url>file:///repositories/maven.davidtrott.com/snapshot</url>
         </snapshotRepository>
     </distributionManagement>
 
