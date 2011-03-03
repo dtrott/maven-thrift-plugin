@@ -79,8 +79,6 @@ final class Thrift {
         }
 
         // result will always be 0 here.
-        moveGeneratedFiles();
-
         return 0;
     }
 
@@ -99,33 +97,12 @@ final class Thrift {
             command.add("-I");
             command.add(thriftPathElement.toString());
         }
-        command.add("-o");
+        command.add("-out");
         command.add(javaOutputDirectory.toString());
         command.add("--gen");
         command.add(generator);
         command.add(thriftFile.toString());
         return ImmutableList.copyOf(command);
-    }
-
-    private void moveGeneratedFiles() {
-        File genDir = new File(javaOutputDirectory, GENERATED_JAVA);
-        final File[] generatedFiles = genDir.listFiles();
-        for (File generatedFile : generatedFiles) {
-            final String filename = generatedFile.getName();
-            final File targetLocation = new File(javaOutputDirectory, filename);
-            if (targetLocation.exists()) {
-                if (!targetLocation.delete()) {
-                    throw new RuntimeException("File Overwrite Failed: " + targetLocation.getPath());
-                }
-            }
-            if (!generatedFile.renameTo(targetLocation)) {
-                throw new RuntimeException("Rename Failed: " + targetLocation.getPath());
-            }
-        }
-
-        if (!genDir.delete()) {
-            throw new RuntimeException("Failed to delete directory: " + genDir.getPath());
-        }
     }
 
     /**
