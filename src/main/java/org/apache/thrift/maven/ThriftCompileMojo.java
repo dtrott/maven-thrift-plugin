@@ -20,44 +20,44 @@ import java.util.List;
 
 public final class ThriftCompileMojo extends AbstractThriftMojo {
 
-  /**
-   * The source directories containing the sources to be compiled.
-   *
-   * @parameter default-value="${basedir}/src/main/thrift"
-   * @required
-   */
-  private File thriftSourceRoot;
+    /**
+     * The source directories containing the sources to be compiled.
+     *
+     * @parameter default-value="${basedir}/src/main/thrift"
+     * @required
+     */
+    private File thriftSourceRoot;
 
-  /**
-   * This is the directory into which the {@code .java} will be created.
-   *
-   * @parameter default-value="${project.build.directory}/generated-sources/thrift"
-   * @required
-   */
-  private File outputDirectory;
+    /**
+     * This is the directory into which the {@code .java} will be created.
+     *
+     * @parameter default-value="${project.build.directory}/generated-sources/thrift"
+     * @required
+     */
+    private File outputDirectory;
 
     @Override
-  protected List<Artifact> getDependencyArtifacts() {
-    // TODO(gak): maven-project needs generics
-    @SuppressWarnings("unchecked")
-    List<Artifact> compileArtifacts = project.getCompileArtifacts();
-    return compileArtifacts;
-  }
+    protected List<Artifact> getDependencyArtifacts() {
+        // TODO(gak): maven-project needs generics
+        @SuppressWarnings("unchecked")
+        List<Artifact> compileArtifacts = project.getCompileArtifacts();
+        return compileArtifacts;
+    }
 
-  @Override
-  protected File getOutputDirectory() {
-    return outputDirectory;
-  }
+    @Override
+    protected File getOutputDirectory() {
+        return outputDirectory;
+    }
 
-  @Override
-  protected File getThriftSourceRoot() {
-    return thriftSourceRoot;
-  }
+    @Override
+    protected File getThriftSourceRoot() {
+        return thriftSourceRoot;
+    }
 
-  @Override
-  protected void attachFiles() {
-    project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
-    projectHelper.addResource(project, thriftSourceRoot.getAbsolutePath(),
-        ImmutableList.of("**/*.thrift"), ImmutableList.of());
-  }
+    @Override
+    protected void attachFiles() {
+        project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
+        projectHelper.addResource(project, thriftSourceRoot.getAbsolutePath(),
+                ImmutableList.of("**/*.thrift"), ImmutableList.of());
+    }
 }

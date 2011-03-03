@@ -218,7 +218,7 @@ final class Thrift {
             } else {
                 final File parentDirectory = directory.getParentFile();
                 return (parentDirectory == null) ? false
-                    : checkThriftFileIsInThriftPathHelper(parentDirectory);
+                        : checkThriftFileIsInThriftPathHelper(parentDirectory);
             }
         }
 
@@ -266,7 +266,7 @@ final class Thrift {
         public Thrift build() {
             checkState(!thriftFiles.isEmpty());
             return new Thrift(executable, generator, ImmutableSet.copyOf(thriftPathElements),
-                ImmutableSet.copyOf(thriftFiles), javaOutputDirectory);
+                    ImmutableSet.copyOf(thriftFiles), javaOutputDirectory);
         }
     }
 }
