@@ -1,23 +1,20 @@
 package org.apache.thrift.maven;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import org.codehaus.plexus.util.cli.CommandLineException;
+import org.codehaus.plexus.util.cli.CommandLineUtils;
+import org.codehaus.plexus.util.cli.Commandline;
+
+import java.io.File;
+import java.util.List;
+import java.util.Set;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newLinkedList;
 import static com.google.common.collect.Sets.newHashSet;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
-import org.codehaus.plexus.util.cli.CommandLineException;
-import org.codehaus.plexus.util.cli.CommandLineUtils;
-import org.codehaus.plexus.util.cli.Commandline;
-import org.codehaus.plexus.util.cli.DefaultConsumer;
-import org.codehaus.plexus.util.cli.StreamConsumer;
-
-import java.io.File;
-import java.util.List;
-import java.util.Set;
 
 /**
  * This class represents an invokable configuration of the {@code thrift}
@@ -198,7 +195,7 @@ final class Thrift {
 
         /**
          * Adds the option string for the Thrift executable's {@code --gen} parameter.
-         * 
+         *
          * @param generator
          * @return The builder
          * @throws NullPointerException If {@code generator} is {@code null}.

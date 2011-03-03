@@ -1,7 +1,6 @@
 package org.apache.thrift.maven;
 
 import com.google.common.collect.ImmutableList;
-
 import org.apache.maven.artifact.Artifact;
 
 import java.io.File;
