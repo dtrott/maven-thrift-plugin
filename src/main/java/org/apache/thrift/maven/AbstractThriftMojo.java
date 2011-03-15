@@ -129,20 +129,35 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     private Set<String> excludes = ImmutableSet.of();
 
     /**
+     * @parameter
+     */
+    private long staleMillis = 0;
+
+    /**
+     * @parameter
+     */
+    private boolean checkStaleness = false;
+
+    /**
      * Executes the mojo.
      */
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         checkParameters();
         final File thriftSourceRoot = getThriftSourceRoot();
         if (thriftSourceRoot.exists()) {
             try {
                 ImmutableSet<File> thriftFiles = findThriftFilesInDirectory(thriftSourceRoot);
+                final File outputDirectory = getOutputDirectory();
+                ImmutableSet<File> outputFiles = findGeneratedFilesInDirectory(getOutputDirectory());
+
                 if (thriftFiles.isEmpty()) {
                     getLog().info("No thrift files to compile.");
+                } else if (checkStaleness && ((lastModified(thriftFiles) + staleMillis) < lastModified(outputFiles))) {
+                    getLog().info("Skipping compilation because target directory newer than sources");
                 } else {
                     ImmutableSet<File> derivedThriftPathElements =
                             makeThriftPathFromJars(temporaryThriftFileDirectory, getDependencyArtifactFiles());
-                    final File outputDirectory = getOutputDirectory();
                     outputDirectory.mkdirs();
 
                     // Quick fix to fix issues with two mvn installs in a row (ie no clean)
@@ -252,6 +267,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                 }
             } else if (classpathElementFile.isDirectory()) {
                 File[] thriftFiles = classpathElementFile.listFiles(new FilenameFilter() {
+                    @Override
                     public boolean accept(File dir, String name) {
                         return name.endsWith(THRIFT_FILE_SUFFIX);
                     }
@@ -281,6 +297,25 @@ abstract class AbstractThriftMojo extends AbstractMojo {
             thriftFiles.addAll(findThriftFilesInDirectory(directory));
         }
         return ImmutableSet.copyOf(thriftFiles);
+    }
+
+    ImmutableSet<File> findGeneratedFilesInDirectory(File directory) throws IOException {
+        if (directory == null || !directory.isDirectory())
+            return ImmutableSet.of();
+
+        // TODO: plexus-utils needs generics
+        @SuppressWarnings("unchecked")
+        List<File> javaFilesInDirectory = getFiles(directory, "**/*.java", null);
+        return ImmutableSet.copyOf(javaFilesInDirectory);
+    }
+
+    private long lastModified(ImmutableSet<File> files) {
+        long result = 0;
+        for (File file : files) {
+            if (file.lastModified() > result)
+                result = file.lastModified();
+        }
+        return result;
     }
 
     /**
