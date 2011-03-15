@@ -129,6 +129,16 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     private Set<String> excludes = ImmutableSet.of();
 
     /**
+     * @parameter
+     */
+    private long staleMillis = 0;
+
+    /**
+     * @parameter
+     */
+    private boolean checkStaleness = false;
+
+    /**
      * Executes the mojo.
      */
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -137,12 +147,16 @@ abstract class AbstractThriftMojo extends AbstractMojo {
         if (thriftSourceRoot.exists()) {
             try {
                 ImmutableSet<File> thriftFiles = findThriftFilesInDirectory(thriftSourceRoot);
+                final File outputDirectory = getOutputDirectory();
+                ImmutableSet<File> outputFiles = findGeneratedFilesInDirectory(getOutputDirectory());
+
                 if (thriftFiles.isEmpty()) {
                     getLog().info("No thrift files to compile.");
+                } else if (checkStaleness && ((lastModified(thriftFiles) + staleMillis) < lastModified(outputFiles))) {
+                    getLog().info("Skipping compilation because target directory newer than sources.");
                 } else {
                     ImmutableSet<File> derivedThriftPathElements =
                             makeThriftPathFromJars(temporaryThriftFileDirectory, getDependencyArtifactFiles());
-                    final File outputDirectory = getOutputDirectory();
                     outputDirectory.mkdirs();
 
                     // Quick fix to fix issues with two mvn installs in a row (ie no clean)
@@ -175,6 +189,25 @@ abstract class AbstractThriftMojo extends AbstractMojo {
             getLog().info(format("%s does not exist. Review the configuration or consider disabling the plugin.",
                     thriftSourceRoot));
         }
+    }
+
+    ImmutableSet<File> findGeneratedFilesInDirectory(File directory) throws IOException {
+        if (directory == null || !directory.isDirectory())
+            return ImmutableSet.of();
+
+        // TODO(gak): plexus-utils needs generics
+        @SuppressWarnings("unchecked")
+        List<File> javaFilesInDirectory = getFiles(directory, "**/*.java", null);
+        return ImmutableSet.copyOf(javaFilesInDirectory);
+    }
+
+    private long lastModified(ImmutableSet<File> files) {
+        long result = 0;
+        for (File file : files) {
+            if (file.lastModified() > result)
+                result = file.lastModified();
+        }
+        return result;
     }
 
     private void checkParameters() {
