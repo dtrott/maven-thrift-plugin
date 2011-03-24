@@ -154,6 +154,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                     getLog().info("No thrift files to compile.");
                 } else if (checkStaleness && ((lastModified(thriftFiles) + staleMillis) < lastModified(outputFiles))) {
                     getLog().info("Skipping compilation because target directory newer than sources.");
+                    attachFiles();
                 } else {
                     ImmutableSet<File> derivedThriftPathElements =
                             makeThriftPathFromJars(temporaryThriftFileDirectory, getDependencyArtifactFiles());
