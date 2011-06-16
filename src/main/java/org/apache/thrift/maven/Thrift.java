@@ -2,11 +2,15 @@ package org.apache.thrift.maven;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
+import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -65,7 +69,7 @@ final class Thrift {
      * @return The exit status of {@code thrift}.
      * @throws CommandLineException
      */
-    public int compile() throws CommandLineException {
+    public int compile() throws CommandLineException, IOException {
 
         for (File thriftFile : thriftFiles) {
             Commandline cl = new Commandline();
@@ -76,8 +80,19 @@ final class Thrift {
             if (result != 0) {
                 return result;
             }
+            File[] list = javaOutputDirectory.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.startsWith("gen-");
+               }
+            });
+            for (File file : list) {
+                if(file.exists()){
+                    FileUtils.copyDirectoryStructure(file, javaOutputDirectory);
+                    FileUtils.deleteDirectory(file);
+                }
+            }
         }
-
         // result will always be 0 here.
         return 0;
     }
@@ -97,7 +112,7 @@ final class Thrift {
             command.add("-I");
             command.add(thriftPathElement.toString());
         }
-        command.add("-out");
+        command.add("-o");
         command.add(javaOutputDirectory.toString());
         command.add("--gen");
         command.add(generator);

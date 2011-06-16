@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,7 +54,13 @@ public class TestThrift {
         executeThriftCompile();
     }
 
-    private void executeThriftCompile() throws CommandLineException {
+    @Test
+    public void testThriftCompileWithGeneratorOptionBeans() throws Exception {
+        builder.setGenerator("java:beans");
+        executeThriftCompile();
+    }
+    
+    private void executeThriftCompile() throws CommandLineException, IOException {
         final File thriftFile = new File(idlDir, "shared.thrift");
 
         builder.addThriftFile(thriftFile);
