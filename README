@@ -1,3 +1,7 @@
+CAUTION: Plugin version 0.1.11 requires thrift compiler version 0.7.0 or newer.
+
+You must use plugin version 0.1.10 for older thrift versions.
+
 ***************************
 *** Maven Thrift Plugin ***
 ***************************
