@@ -97,7 +97,7 @@ final class Thrift {
             command.add("-I");
             command.add(thriftPathElement.toString());
         }
-        command.add("-out");
+        command.add("-o");
         command.add(javaOutputDirectory.toString());
         command.add("--gen");
         command.add(generator);
