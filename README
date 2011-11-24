@@ -1,6 +1,57 @@
-CAUTION: Plugin version 0.1.11 requires thrift compiler version 0.7.0 or newer.
+***********************
+*** VERSION WARNING ***
+***********************
 
-You must use plugin version 0.1.10 for older thrift versions.
+Drop to the command line and type:
+
+ thrift -version
+
+To find out what version of the compiler you are using.
+
+
+Older Compiler Versions (Less than 0.7.0)
+===
+You must use version 0.1.10 of this plugin.
++ Check out the source.
++ Switch to the old branch: git checkout -b old maven-thrift-plugin-0.1.10
+
+And build/use that version.
+
+
+
+Newer Compiler Versions (0.7.0 or newer)
+===
+0.7.0 should work fine with the latest version of this plugin.
+However I have seen incompatibilities between the compiler and libthrift.
+
+To resolve these check out the source for the compiler from the 0.7.0 branch (Do not trust the TAR BALLS)
+
+svn co http://svn.apache.org/repos/asf/thrift/tags/thrift-0.7.0
+
+That version should work fine with the maven version of lib thrift:
+
+        <dependency>
+            <groupId>org.apache.thrift</groupId>
+            <artifactId>libthrift</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+
+
+Note: If you have problems building on OSX you might want to look at this article:
+
+http://lueb.be/2009/02/23/installing-apache-thrift-on-mac-os-x-105-leopard/
+
+The fastest way to build the compiler is:
+
+$ svn co http://svn.apache.org/repos/asf/thrift/tags/thrift-0.7.0
+$ cd thrift-0.7.0
+$ cp /usr/X11/share/aclocal/pkg.m4 aclocal/
+$ ./bootstrap.sh
+$ ./configure
+$ cd compiler/cpp/
+$ make
+
+
 
 ***************************
 *** Maven Thrift Plugin ***
@@ -32,6 +83,7 @@ A minimal configuration to invoke this plugin would be:
             <plugin>
                 <groupId>org.apache.thrift.tools</groupId>
                 <artifactId>maven-thrift-plugin</artifactId>
+                <version>0.1.10</version>
                 <configuration>
                     <thriftExecutable>/usr/local/bin/thrift</thriftExecutable>
                 </configuration>
