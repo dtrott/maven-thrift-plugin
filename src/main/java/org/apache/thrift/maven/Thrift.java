@@ -49,7 +49,7 @@ final class Thrift {
     final static String GENERATED_JAVA = "gen-java";
 
     private final String executable;
-    private final String generator;
+    private final ImmutableSet<String> generator;
     private final ImmutableSet<File> thriftPathElements;
     private final ImmutableSet<File> thriftFiles;
     private final File javaOutputDirectory;
@@ -60,16 +60,16 @@ final class Thrift {
      * Constructs a new instance. This should only be used by the {@link Builder}.
      *
      * @param executable          The path to the {@code thrift} executable.
-     * @param generator           The value for the {@code --gen} option.
+     * @param generators           The value for the {@code --gen} option.
      * @param thriftPath          The directories in which to search for imports.
      * @param thriftFiles         The thrift source files to compile.
      * @param javaOutputDirectory The directory into which the java source files
      *                            will be generated.
      */
-    private Thrift(String executable, String generator, ImmutableSet<File> thriftPath,
+    private Thrift(String executable, ImmutableSet<String> generators, ImmutableSet<File> thriftPath,
                    ImmutableSet<File> thriftFiles, File javaOutputDirectory) {
         this.executable = checkNotNull(executable, "executable");
-        this.generator = checkNotNull(generator, "generator");
+        this.generators = checkNotNull(generator, "generator");
         this.thriftPathElements = checkNotNull(thriftPath, "thriftPath");
         this.thriftFiles = checkNotNull(thriftFiles, "thriftFiles");
         this.javaOutputDirectory = checkNotNull(javaOutputDirectory, "javaOutputDirectory");
@@ -118,8 +118,10 @@ final class Thrift {
         }
         command.add("-out");
         command.add(javaOutputDirectory.toString());
-        command.add("--gen");
-        command.add(generator);
+        for (String generator : generators) {
+            command.add("--gen");
+            command.add(generator);
+        }
         command.add(thriftFile.toString());
         return ImmutableList.copyOf(command);
     }
@@ -148,7 +150,7 @@ final class Thrift {
         private final File javaOutputDirectory;
         private Set<File> thriftPathElements;
         private Set<File> thriftFiles;
-        private String generator;
+        private Set<String> generators;
 
         /**
          * Constructs a new builder. The two parameters are present as they are
@@ -196,9 +198,9 @@ final class Thrift {
          * @return The builder
          * @throws NullPointerException If {@code generator} is {@code null}.
          */
-        public Builder setGenerator(String generator) {
-            checkNotNull(generator);
-            this.generator = generator;
+        public Builder setGenerators(Set<String> generators) {
+            checkNotNull(generators);
+            this.generators = generators;
             return this;
         }
 
@@ -261,7 +263,7 @@ final class Thrift {
          */
         public Thrift build() {
             checkState(!thriftFiles.isEmpty());
-            return new Thrift(executable, generator, ImmutableSet.copyOf(thriftPathElements),
+            return new Thrift(executable, generators, ImmutableSet.copyOf(thriftPathElements),
                     ImmutableSet.copyOf(thriftFiles), javaOutputDirectory);
         }
     }
