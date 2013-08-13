@@ -6,14 +6,33 @@
     <packaging>maven-plugin</packaging>
     <name>Maven Thrift Plugin</name>
     <version>0.1.12-SNAPSHOT</version>
+    <description>Maven Thrift Plugin that executes the thrift code generator</description>
+    <url>https://github.com/dtrott/maven-thrift-plugin</url>
 
     <prerequisites>
         <maven>2.0.6</maven>
     </prerequisites>
 
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <scm>
+        <url>https://github.com/dtrott/maven-thrift-plugin</url>
         <connection>scm:git:git://github.com/dtrott/maven-thrift-plugin.git</connection>
     </scm>
+
+    <developers>
+        <developer>
+            <id>drott</id>
+            <name>David Trott</name>
+            <email>github@davidtrott.com</email>
+        </developer>
+    </developers>
 
     <distributionManagement>
         <downloadUrl>http://maven.davidtrott.com/repository</downloadUrl>
