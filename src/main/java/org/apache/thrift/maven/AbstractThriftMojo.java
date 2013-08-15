@@ -21,7 +21,11 @@ package org.apache.thrift.maven;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -69,6 +73,14 @@ abstract class AbstractThriftMojo extends AbstractMojo {
 
     private static final String DEFAULT_INCLUDES = "**/*" + THRIFT_FILE_SUFFIX;
 
+    public static final String THRIFT_BINARY_GROUP_ID = "org.apache.thrift";
+    public static final String THRIFT_BINARY_ARTIFACT_ID = "thrift";
+    public static final String THRIFT_BINARY_TYPE = "bin";
+
+    public static final String OS_CLASSIFIER_MAC = "mac";
+    public static final String OS_CLASSIFIER_WINDOWS = "win";
+    public static final String OS_CLASSIFIER_LINUX = "lin";
+
     /**
      * The current Maven project.
      *
@@ -87,12 +99,12 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     protected MavenProjectHelper projectHelper;
 
     /**
-     * This is the path to the {@code thrift} executable. By default it will search the {@code $PATH}.
+     * This is the version of thrift.
      *
-     * @parameter default-value="thrift"
+     * @parameter default-value="0.9.0"
      * @required
      */
-    private String thriftExecutable;
+    private String thriftVersion;
 
     /**
      * This string is passed to the {@code --gen} option of the {@code thrift} parameter. By default
@@ -124,6 +136,35 @@ abstract class AbstractThriftMojo extends AbstractMojo {
      * @required
      */
     private ArtifactRepository localRepository;
+
+    /**
+     * Used to look up Artifacts in the remote repository.
+     *
+     * @parameter expression=
+     *  "${component.org.apache.maven.artifact.factory.ArtifactFactory}"
+     * @required
+     * @readonly
+     */
+    protected ArtifactFactory artifactFactory;
+
+    /**
+     * Used to look up Artifacts in the remote repository.
+     *
+     * @parameter expression=
+     *  "${component.org.apache.maven.artifact.resolver.ArtifactResolver}"
+     * @required
+     * @readonly
+     */
+    protected ArtifactResolver artifactResolver;
+
+    /**
+     * List of Remote Repositories used by the resolver
+     *
+     * @parameter expression="${project.remoteArtifactRepositories}"
+     * @readonly
+     * @required
+     */
+    protected List remoteRepositories;
 
     /**
      * Set this to {@code false} to disable hashing of dependent jar paths.
@@ -182,7 +223,22 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                     // Quick fix to fix issues with two mvn installs in a row (ie no clean)
                     cleanDirectory(outputDirectory);
 
-                    Thrift thrift = new Thrift.Builder(thriftExecutable, outputDirectory)
+                    Artifact artifact = null;
+                    try {
+                        artifact = artifactFactory.createArtifactWithClassifier(THRIFT_BINARY_GROUP_ID, 
+                                THRIFT_BINARY_ARTIFACT_ID, thriftVersion, THRIFT_BINARY_TYPE, getDefaultClassifier());
+
+                        artifactResolver.resolve(artifact, remoteRepositories, localRepository);
+                        
+                    } catch (ArtifactResolutionException e) {
+                        getLog().error("can't resolve parent pom", e);
+                    } catch (ArtifactNotFoundException e) {
+                        getLog().error("can't resolve parent pom", e);
+                    }
+                    
+                    artifact.getFile().setExecutable(true);
+                    
+                    Thrift thrift = new Thrift.Builder(artifact.getFile().getAbsolutePath(), outputDirectory)
                             .setGenerator(generator)
                             .addThriftPathElement(thriftSourceRoot)
                             .addThriftPathElements(derivedThriftPathElements)
@@ -221,6 +277,22 @@ abstract class AbstractThriftMojo extends AbstractMojo {
         return ImmutableSet.copyOf(javaFilesInDirectory);
     }
 
+    protected static String getDefaultClassifier() throws MojoFailureException {
+
+        String systemName = System.getProperty("os.name");
+        String preparedName = systemName.toLowerCase();
+
+        if (preparedName.contains("win")) {
+            return OS_CLASSIFIER_WINDOWS;
+        } else if (preparedName.contains("lin")) {
+            return OS_CLASSIFIER_LINUX;
+        } else if (preparedName.contains("mac")) {
+            return OS_CLASSIFIER_MAC;
+        } else {
+            throw new MojoFailureException(systemName + " is not supported");
+        }
+    }
+
     private long lastModified(ImmutableSet<File> files) {
         long result = 0;
         for (File file : files) {
@@ -233,7 +305,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     private void checkParameters() {
         checkNotNull(project, "project");
         checkNotNull(projectHelper, "projectHelper");
-        checkNotNull(thriftExecutable, "thriftExecutable");
+        checkNotNull(thriftVersion, "thriftVersion");
         checkNotNull(generator, "generator");
         final File thriftSourceRoot = getThriftSourceRoot();
         checkNotNull(thriftSourceRoot);
