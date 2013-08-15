@@ -79,7 +79,7 @@ abstract class AbstractThriftMojo extends AbstractMojo {
 
     public static final String OS_CLASSIFIER_MAC = "mac";
     public static final String OS_CLASSIFIER_WINDOWS = "win";
-    public static final String OS_CLASSIFIER_LINUX = "lin";
+    public static final String OS_CLASSIFIER_LINUX = "nix";
 
     /**
      * The current Maven project.
