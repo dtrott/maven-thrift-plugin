@@ -5,7 +5,7 @@
     <artifactId>thrift-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <name>Maven Thrift Plugin</name>
-    <version>0.1.12</version>
+    <version>0.1.13-SNAPSHOT</version>
     <description>Maven Thrift Plugin that executes the thrift code generator</description>
     <url>https://github.com/dtrott/maven-thrift-plugin</url>
 
@@ -24,7 +24,7 @@
     <scm>
         <url>https://github.com/dtrott/maven-thrift-plugin</url>
         <connection>scm:git:git@github.com:dtrott/maven-thrift-plugin.git</connection>
-      <tag>thrift-maven-plugin-0.1.12</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <developers>
