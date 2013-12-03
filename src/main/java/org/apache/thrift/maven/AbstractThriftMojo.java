@@ -19,6 +19,7 @@ package org.apache.thrift.maven;
  * under the License.
  */
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -40,7 +41,6 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import static com.google.common.base.Join.join;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -321,9 +321,12 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     ImmutableSet<File> findThriftFilesInDirectory(File directory) throws IOException {
         checkNotNull(directory);
         checkArgument(directory.isDirectory(), "%s is not a directory", directory);
+
+        final Joiner joiner = Joiner.on(',');
+
         // TODO(gak): plexus-utils needs generics
         @SuppressWarnings("unchecked")
-        List<File> thriftFilesInDirectory = getFiles(directory, join(",", includes), join(",", excludes));
+        List<File> thriftFilesInDirectory = getFiles(directory, joiner.join(includes), joiner.join(excludes));
         return ImmutableSet.copyOf(thriftFilesInDirectory);
     }
 
