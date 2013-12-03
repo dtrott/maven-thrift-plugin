@@ -24,7 +24,7 @@
 
     <scm>
         <url>https://github.com/dtrott/maven-thrift-plugin</url>
-        <connection>scm:git:git://github.com/dtrott/maven-thrift-plugin.git</connection>
+        <connection>scm:git:git@github.com:dtrott/maven-thrift-plugin.git</connection>
     </scm>
 
     <developers>
