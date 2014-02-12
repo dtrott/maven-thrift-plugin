@@ -35,7 +35,7 @@ public final class ThriftTestCompileMojo extends AbstractThriftMojo {
     /**
      * The source directories containing the sources to be compiled.
      *
-     * @parameter default-value="${basedir}/src/test/thrift"
+     * @parameter default-value="${basedir}/src/test/resources"
      * @required
      */
     private File thriftTestSourceRoot;
