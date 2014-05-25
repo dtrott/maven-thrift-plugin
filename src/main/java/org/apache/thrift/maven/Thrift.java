@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
+import sun.tools.jar.CommandLine;
 
 import java.io.File;
 import java.util.List;
@@ -99,6 +100,32 @@ final class Thrift {
 
         // result will always be 0 here.
         return 0;
+    }
+
+    /**
+     * Get the version of used thrift command.
+     * <p/>
+     *
+     * @return String representation of the version (0.7.0, 0.9.0, ...)
+     * @throws CommandLineException
+     */
+    public String getVersion() throws CommandLineException {
+        Commandline cl = new Commandline();
+        cl.setExecutable(executable);
+        cl.addArguments(new String[]{ "-version" });
+
+        final int result = CommandLineUtils.executeCommandLine(cl, null, output, error);
+        if(result != 1) {
+            return null;
+        }
+
+        // We're expecting that the output will be single line such as:
+        //   Thrift version 0.9.0
+        String out = output.getOutput();
+
+        // We're assuming that the version will be the final element on the line
+        String []split = out.split(" ");
+        return split[split.length -1].trim();
     }
 
     /**

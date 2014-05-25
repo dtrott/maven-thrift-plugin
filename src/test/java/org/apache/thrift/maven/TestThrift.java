@@ -29,6 +29,7 @@ import java.io.File;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -146,6 +147,18 @@ public class TestThrift {
             fail("Expected IllegalStateException");
         } catch (IllegalStateException e) {
         }
+    }
+
+    @Test
+    public void testGetVersion() throws Exception {
+        final File sharedThrift = new File(idlDir, "shared.thrift");
+        builder.addThriftFile(sharedThrift);
+        final Thrift thrift = builder.build();
+        String version = thrift.getVersion();
+
+        // As we are using external library we don't know what exactly to expect
+        assertNotNull(version);
+        assertFalse(version.isEmpty());
     }
 
     @After
