@@ -23,6 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -93,6 +94,21 @@ abstract class AbstractThriftMojo extends AbstractMojo {
      * @required
      */
     private String thriftExecutable;
+
+    /**
+     *  If set to true, we'll auto-version the executable by tacking on the project's thrift library
+     *  dependency version onto the thriftExecutable name.
+     *
+     *  @parameter default-value=false
+     */
+    private Boolean autoVersionExecutable;
+
+    /**
+     *  For autoversioning, set the separator between the executable name and the version.
+     *
+     *  @parameter default-value="-";
+     */
+    private String autoVersionSeparator;
 
     /**
      * This string is passed to the {@code --gen} option of the {@code thrift} parameter. By default
@@ -182,6 +198,8 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                     // Quick fix to fix issues with two mvn installs in a row (ie no clean)
                     cleanDirectory(outputDirectory);
 
+                    autoVersionExecutableIfNecessary();
+
                     Thrift thrift = new Thrift.Builder(thriftExecutable, outputDirectory)
                             .setGenerator(generator)
                             .addThriftPathElement(thriftSourceRoot)
@@ -209,6 +227,31 @@ abstract class AbstractThriftMojo extends AbstractMojo {
             getLog().info(format("%s does not exist. Review the configuration or consider disabling the plugin.",
                     thriftSourceRoot));
         }
+    }
+
+    private void autoVersionExecutableIfNecessary() {
+        if (!autoVersionExecutable) {
+            return;
+        }
+
+        List<Dependency> deps = project.getDependencies();
+        String version = null;
+        for (Dependency dep : deps) {
+            if (dep.getGroupId().equals("org.apache.thrift")) {
+                if (dep.getArtifactId().equals("thrift") || dep.getArtifactId().equals("libthrift")) {
+                    version = dep.getVersion();
+                    break;
+                }
+            }
+        }
+        if (thriftExecutable.toLowerCase().endsWith(".exe")) {
+            int cutoff = thriftExecutable.length() - 4;
+            String suffix = thriftExecutable.substring(cutoff);
+            thriftExecutable = thriftExecutable.substring(0, cutoff) + autoVersionSeparator + version + suffix;
+        } else {
+            thriftExecutable = thriftExecutable + autoVersionSeparator + version;
+        }
+        getLog().info(format("Auto versioned thrift executable to \"%s\"", thriftExecutable));
     }
 
     ImmutableSet<File> findGeneratedFilesInDirectory(File directory) throws IOException {
