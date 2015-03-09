@@ -294,13 +294,14 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                 for (JarEntry jarEntry : list(classpathJar.entries())) {
                     final String jarEntryName = jarEntry.getName();
                     if (jarEntry.getName().endsWith(THRIFT_FILE_SUFFIX)) {
+                        final File dependentTreeRoot = new File(temporaryThriftFileDirectory,
+                            truncatePath(classpathJar.getName()));
                         final File uncompressedCopy =
-                                new File(new File(temporaryThriftFileDirectory,
-                                        truncatePath(classpathJar.getName())), jarEntryName);
+                                new File(dependentTreeRoot, jarEntryName);
                         uncompressedCopy.getParentFile().mkdirs();
                         copyStreamToFile(new RawInputStreamFacade(classpathJar
                                 .getInputStream(jarEntry)), uncompressedCopy);
-                        thriftDirectories.add(uncompressedCopy.getParentFile());
+                        thriftDirectories.add(dependentTreeRoot);
                     }
                 }
             } else if (classpathElementFile.isDirectory()) {
