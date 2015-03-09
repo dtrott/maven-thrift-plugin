@@ -138,6 +138,16 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     private boolean hashDependentPaths;
 
     /**
+     * Set thrift version that should be enforced for the build.
+     * <p/>
+     * The mojo execution will fail if different thrift version will be found
+     * instead.
+     *
+     * @parameter
+     */
+    private String enforceThriftVersion;
+
+    /**
      * @parameter
      */
     private Set<String> includes = ImmutableSet.of(DEFAULT_INCLUDES);
@@ -189,6 +199,23 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                             .addThriftPathElements(asList(additionalThriftPathElements))
                             .addThriftFiles(thriftFiles)
                             .build();
+
+                    // Detect thrift version (and also print it out which is very useful)
+                    String thriftVersion = thrift.getVersion();
+                    if(thriftVersion == null) {
+                        getLog().error("thrift failed output: " + thrift.getOutput());
+                        getLog().error("thrift failed error: " + thrift.getError());
+                        throw new MojoFailureException("Can't detect thrift version. Verify that the thriftExecutable parameter contains valid value.");
+                    }
+                    getLog().info("Using thrift version: " + thrift.getVersion());
+
+                    // Enforce thrift version if specified
+                    if(enforceThriftVersion != null && !enforceThriftVersion.equals(thriftVersion)) {
+                        throw new MojoFailureException("Thrift version miss match. Requested version "
+                          + enforceThriftVersion + " but version " + thriftVersion
+                          + " has been found instead.");
+                    }
+
                     final int exitStatus = thrift.compile();
                     if (exitStatus != 0) {
                         getLog().error("thrift failed output: " + thrift.getOutput());
