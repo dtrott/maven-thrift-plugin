@@ -158,6 +158,11 @@ abstract class AbstractThriftMojo extends AbstractMojo {
     private boolean checkStaleness = false;
 
     /**
+     * @parameter
+     */
+    private boolean cleanOutputDirectory = true;
+
+    /**
      * Executes the mojo.
      */
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -180,7 +185,10 @@ abstract class AbstractThriftMojo extends AbstractMojo {
                     outputDirectory.mkdirs();
 
                     // Quick fix to fix issues with two mvn installs in a row (ie no clean)
-                    cleanDirectory(outputDirectory);
+                    if(cleanOutputDirectory){
+                        cleanDirectory(outputDirectory);
+                    }
+
 
                     Thrift thrift = new Thrift.Builder(thriftExecutable, outputDirectory)
                             .setGenerator(generator)
