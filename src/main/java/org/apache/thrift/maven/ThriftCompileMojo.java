@@ -42,7 +42,7 @@ public final class ThriftCompileMojo extends AbstractThriftMojo {
     /**
      * The source directories containing the sources to be compiled.
      *
-     * @parameter default-value="${basedir}/src/main/thrift"
+     * @parameter default-value="${basedir}/src/main/resources"
      * @required
      */
     private File thriftSourceRoot;

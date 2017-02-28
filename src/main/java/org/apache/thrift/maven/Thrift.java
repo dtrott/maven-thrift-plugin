@@ -44,7 +44,7 @@ import static com.google.common.collect.Sets.newHashSet;
  *
  * @author gak@google.com (Gregory Kick)
  */
-final class Thrift {
+public final class Thrift {
 
     final static String GENERATED_JAVA = "gen-java";
 
