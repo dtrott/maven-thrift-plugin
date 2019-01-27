@@ -35,6 +35,7 @@ import java.util.List;
  * @phase generate-sources
  * @goal compile
  * @requiresDependencyResolution compile
+ * @threadSafe true
  */
 
 public final class ThriftCompileMojo extends AbstractThriftMojo {

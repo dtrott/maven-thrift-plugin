@@ -29,6 +29,7 @@ import java.util.List;
  * @phase generate-test-sources
  * @goal testCompile
  * @requiresDependencyResolution test
+ * @threadSafe true
  */
 public final class ThriftTestCompileMojo extends AbstractThriftMojo {
 
